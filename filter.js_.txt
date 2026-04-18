@@ -1,0 +1,82 @@
+(function() {
+    // 1. Force remove any existing panel
+    const oldPanel = document.getElementById('wallet-auto-panel');
+    if (oldPanel) oldPanel.remove();
+
+    // 2. Identify the best container
+    const container = document.getElementById('app') || document.body;
+
+    let running = false;
+    let interval;
+
+    // 3. Create the UI Panel
+    const panel = document.createElement('div');
+    panel.id = 'wallet-auto-panel';
+    panel.style.cssText = `
+        position: fixed !important;
+        top: 80px !important;
+        left: 10px !important;
+        width: 150px !important;
+        z-index: 2147483647 !important;
+        background: #000000 !important;
+        color: #ffffff !important;
+        padding: 12px !important;
+        border: 2px solid #fac10c !important;
+        border-radius: 10px !important;
+        display: block !important;
+    `;
+    
+    panel.innerHTML = `
+        <div style="font-size:12px;font-weight:bold;margin-bottom:8px;color:#fac10c;">AUTO BUYER</div>
+        <input id="targetAmt" type="number" value="214" style="width:100%;background:#222;color:#fff;border:1px solid #555;margin-bottom:8px;padding:4px;">
+        <button id="startAuto" style="width:100%;background:#28a745;color:white;border:none;padding:8px;margin-bottom:5px;border-radius:4px;">START</button>
+        <button id="stopAuto" style="width:100%;background:#dc3545;color:white;border:none;padding:8px;border-radius:4px;">STOP</button>
+    `;
+
+    container.appendChild(panel);
+
+    // 4. Logic
+    const startBtn = document.getElementById("startAuto");
+    const stopBtn = document.getElementById("stopAuto");
+
+    startBtn.onclick = (e) => {
+        e.preventDefault();
+        const goal = document.getElementById("targetAmt").value;
+        running = true;
+        startBtn.innerText = "RUNNING...";
+        startBtn.style.background = "#555";
+        
+        interval = setInterval(() => {
+            if (!running) return;
+            // Use standard straight quotes here
+            const priceElements = document.querySelectorAll('.amount');
+            
+            priceElements.forEach(el => {
+                let currentVal = el.innerText.replace(/[^\d]/g, '');
+                if (currentVal === goal && currentVal !== "") {
+                    el.style.backgroundColor = "yellow";
+                    el.style.color = "black";
+                    
+                    // Logic to find the specific Buy button for THIS price
+                    const row = el.closest('.x-row') || el.parentElement.parentElement;
+                    const buyBtn = row?.querySelector('button.van-button');
+                    
+                    if (buyBtn) {
+                        buyBtn.style.boxShadow = "0 0 10px red";
+                        buyBtn.style.border = "2px solid red";
+                        buyBtn.scrollIntoView({behavior: "smooth", block: "center"});
+                    }
+                }
+            });
+        }, 400);
+    };
+
+    stopBtn.onclick = (e) => {
+        e.preventDefault();
+        running = false;
+        clearInterval(interval);
+        startBtn.innerText = "START";
+        startBtn.style.background = "#28a745";
+        alert("Stopped");
+    };
+})();
